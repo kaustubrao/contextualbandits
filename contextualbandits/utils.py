@@ -1,6 +1,5 @@
-import numpy as np, types, warnings, multiprocessing
+import numpy as np, types, warnings
 from copy import deepcopy
-from joblib import Parallel, delayed
 import pandas as pd
 
 _unexpected_err_msg = "Unexpected error. Please open an issue in GitHub describing what you were doing."
@@ -81,7 +80,7 @@ def _check_constructor_input(base_algorithm, nchoices, batch_train=False):
 
 def _check_njobs(njobs):
     if njobs < 1:
-        njobs = multiprocessing.cpu_count()
+        njobs = 1
     if njobs is None:
         return 1
     assert isinstance(njobs, int)
@@ -401,7 +400,7 @@ class _BootstrappedClassifierBase:
     def fit(self, X, y):
         ### Note: radom number generators are not always thread-safe, so don't parallelize this
         ix_take_all = np.random.randint(X.shape[0], size = (X.shape[0], self.nsamples))
-        Parallel(n_jobs=self.njobs, verbose=0)(delayed(self._fit_single)(sample, ix_take_all, X, y) for sample in range(self.nsamples))
+        self._fit_single(sample, ix_take_all, X, y) for sample in range(self.nsamples)
 
     def _fit_single(self, sample, ix_take_all, X, y):
         ix_take = ix_take_all[:, sample]
@@ -428,7 +427,7 @@ class _BootstrappedClassifierBase:
             rng = np.arange(X.shape[0])
         else:
             raise ValueError(_unexpected_err_msg)
-        Parallel(n_jobs=self.njobs, verbose=0)(delayed(self._partial_fit_single)(sample, w_all, appear_times, rng, X, y) for sample in range(self.nsamples))
+        self._partial_fit_single(sample, w_all, appear_times, rng, X, y) for sample in range(self.nsamples)
 
     def _partial_fit_single(self, sample, w_all, appear_times_all, rng, X, y):
         if w_all is not None:
@@ -443,14 +442,14 @@ class _BootstrappedClassifierBase:
 
     def _score_max(self, X):
         pred = np.empty((X.shape[0], self.nsamples))
-        Parallel(n_jobs=self.njobs, verbose=0)(delayed(self._assign_score)(sample, pred, X) for sample in range(self.nsamples))
+        self._assign_score(sample, pred, X) for sample in range(self.nsamples)
         return np.percentile(pred, self.percentile, axis=1)
 
     def _score_avg(self, X):
         ### Note: don't try to make it more memory efficient by summing to a single array,
         ### as otherwise it won't be multithreaded.
         pred = np.empty((X.shape[0], self.nsamples))
-        Parallel(n_jobs=self.njobs, verbose=0)(delayed(self._assign_score)(sample, pred, X) for sample in range(self.nsamples))
+        self._assign_score(sample, pred, X) for sample in range(self.nsamples)
         return pred.mean(axis = 1)
 
     def _assign_score(self, sample, pred, X):
@@ -528,7 +527,7 @@ class _OneVsRest:
         if self.partialfit:
             self.partial_fit(X, a, r)
         else:
-            Parallel(n_jobs=self.njobs, verbose=0)(delayed(self._full_fit_single)(choice, X, a, r) for choice in range(self.n))
+            self._full_fit_single(choice, X, a, r) for choice in range(self.n)
 
     def _drop_arm(self, drop_ix):
         del self.algos[drop_ix]
@@ -595,7 +594,7 @@ class _OneVsRest:
 
 
     def partial_fit(self, X, a, r):
-        Parallel(n_jobs=self.njobs, verbose=0)(delayed(self._partial_fit_single)(choice, X, a, r) for choice in range(self.n))
+        self._partial_fit_single(choice, X, a, r) for choice in range(self.n)
 
     def _partial_fit_single(self, choice, X, a, r):
         yclass, this_choice = self._filter_arm_data(X, a, r, choice)
@@ -626,7 +625,7 @@ class _OneVsRest:
 
     def decision_function(self, X):
         preds = np.zeros((X.shape[0], self.n))
-        Parallel(n_jobs=self.njobs, verbose=0)(delayed(self._decision_function_single)(choice, X, preds, 1) for choice in range(self.n))
+        self._decision_function_single(choice, X, preds, 1) for choice in range(self.n)
         _apply_smoothing(preds, self.smooth, self.counters)
         return preds
 
@@ -656,7 +655,7 @@ class _OneVsRest:
     def predict_proba(self, X):
         ### this is only used for softmax explorer
         preds = np.zeros((X.shape[0], self.n))
-        Parallel(n_jobs=self.njobs, verbose=0)(delayed(self._decision_function_single)(choice, X, preds, 1) for choice in range(self.n))
+        self._decision_function_single(choice, X, preds, 1) for choice in range(self.n)
         _apply_smoothing(preds, self.smooth, self.counters)
         _apply_inverse_sigmoid(preds)
         _apply_softmax(preds)
@@ -664,7 +663,7 @@ class _OneVsRest:
 
     def predict_proba_raw(self,X):
         preds = np.zeros((X.shape[0], self.n))
-        Parallel(n_jobs=self.njobs, verbose=0)(delayed(self._decision_function_single)(choice, X, preds, 0) for choice in range(self.n))
+        self._decision_function_single(choice, X, preds, 0) for choice in range(self.n)
         _apply_smoothing(preds, self.smooth, self.counters)
         return preds
 
@@ -692,7 +691,7 @@ class _OneVsRest:
     def exploit(self, X):
         ### only used with bootstrapped, bayesian, and lin-ucb/ts classifiers
         pred = np.empty((X.shape[0], self.n))
-        Parallel(n_jobs=self.njobs, verbose=0)(delayed(self._exploit_single)(choice, pred, X) for choice in range(self.n))
+        self._exploit_single(choice, pred, X) for choice in range(self.n)
         return pred
 
     def _exploit_single(self, choice, pred, X):
