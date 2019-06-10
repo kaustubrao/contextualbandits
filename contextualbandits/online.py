@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import pandas as pd, numpy as np, warnings
 from contextualbandits.utils import _check_constructor_input, _check_beta_prior, \
             _check_smoothing, _check_fit_input, _check_X_input, _check_1d_inp, \
@@ -10,7 +8,6 @@ from contextualbandits.utils import _check_constructor_input, _check_beta_prior,
             _check_bools, _LinUCBnTSSingle, _add_method_predict_robust, _check_active_inp, \
             _check_autograd_supported, _get_logistic_grads_norms, _gen_random_grad_norms, \
             _check_bay_inp, _apply_softmax, _apply_inverse_sigmoid
-from joblib import Parallel, delayed
 
 class _BasePolicy:
     def __init__(self):
@@ -1400,7 +1397,7 @@ class SoftmaxExplorer(_BasePolicy):
                 self.multiplier *= self.inflation_rate ** pred.shape[0]
         _apply_softmax(pred)
         chosen = np.empty(pred.shape[0], dtype = "int64")
-        Parallel(n_jobs=self.njobs, verbose=0, require="sharedmem")(delayed(self._pick_pred)(i, chosen, pred) for i in range(pred.shape[0]))
+        self._pick_pred(i, chosen, pred) for i in range(pred.shape[0])
         if output_score:
             score_chosen = pred[np.arange(pred.shape[0]), np.array(chosen)]
         chosen = self._name_arms(chosen)
@@ -1536,7 +1533,7 @@ class LinUCB:
         """
         X, a, r = _check_fit_input(X, a, r, self.choice_names)
         self.ndim = X.shape[1]
-        Parallel(n_jobs=self.njobs, verbose = 0, require="sharedmem")(delayed(self._fit_single)(choice, X, a, r) for choice in range(self.nchoices))
+        self._fit_single(choice, X, a, r) for choice in range(self.nchoices)
         return self
 
     def _fit_single(self, choice, X, a, r):
@@ -1591,7 +1588,7 @@ class LinUCB:
         """
         X = _check_X_input(X)
         pred = np.zeros((X.shape[0], self.nchoices))
-        Parallel(n_jobs=self.njobs, verbose=0, require="sharedmem")(delayed(self._predict)(choice, pred, exploit, X) for choice in range(self.nchoices))
+        self._predict(choice, pred, exploit, X) for choice in range(self.nchoices)
 
         if output_score:
             score_max = np.max(pred, axis=1)
