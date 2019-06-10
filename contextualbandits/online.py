@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import pandas as pd, numpy as np, warnings
 from contextualbandits.utils import _check_constructor_input, _check_beta_prior, \
             _check_smoothing, _check_fit_input, _check_X_input, _check_1d_inp, \
@@ -57,9 +59,7 @@ class _BasePolicy:
     def drop_arm(self, arm_name):
         """
         Drop an arm/choice
-
         Drops (removes/deletes) an arm from the set of available choices to the policy.
-
         Note
         ----
         The available arms, if named, are stored in attribute 'choice_names'.
@@ -70,7 +70,6 @@ class _BasePolicy:
             Arm to drop. If passing an integer, will drop at that index (starting at zero). Otherwise,
             will drop the arm matching this name (argument must be of the same type as the individual entries
             passed to 'nchoices' in the initialization).
-
         Returns
         -------
         self : object
@@ -106,7 +105,6 @@ class _BasePolicy:
     def add_arm(self, arm_name = None, fitted_classifier = None, n_w_req = 0, n_wo_rew = 0):
         """
         Adds a new arm to the pool of choices
-
         Parameters
         ----------
         arm_name : object
@@ -120,7 +118,6 @@ class _BasePolicy:
             Number of trials/rounds with rewards coming from this arm (only used when using a beta prior or smoothing).
         n_wo_rew : int
             Number of trials/rounds without rewards coming from this arm (only used when using a beta prior or smoothing).
-
         Returns
         -------
         self : object
@@ -153,7 +150,6 @@ class _BasePolicy:
     def fit(self, X, a, r):
         """
         Fits the base algorithm (one per class [and per sample if bootstrapped]) to partially labeled data.
-
         Parameters
         ----------
         X : array (n_samples, n_features)
@@ -162,7 +158,6 @@ class _BasePolicy:
             Arms or actions that were chosen for each observations.
         r : array (n_samples), {0,1}
             Rewards that were observed for the chosen actions. Must be binary rewards 0/1.
-
         Returns
         -------
         self : obj
@@ -187,7 +182,6 @@ class _BasePolicy:
         ----
         In order to use this method, the base classifier must have a 'partial_fit' method,
         such as 'sklearn.linear_model.SGDClassifier'.
-
         Parameters
         ----------
         X : array (n_samples, n_features)
@@ -196,7 +190,6 @@ class _BasePolicy:
             Arms or actions that were chosen for each observations.
         r : array (n_samples), {0,1}
             Rewards that were observed for the chosen actions. Must be binary rewards 0/1.
-
         Returns
         -------
         self : obj
@@ -212,7 +205,6 @@ class _BasePolicy:
     def decision_function(self, X):
         """
         Get the scores for each arm following this policy's action-choosing criteria.
-
         Note
         ----
         For 'ExploreFirst', the results from this method will not actually follow the policy in
@@ -295,7 +287,6 @@ class _BasePolicyWithExploit(_BasePolicy):
 class BootstrappedUCB(_BasePolicyWithExploit):
     """
     Bootstrapped Upper Confidence Bound
-
     Obtains an upper confidence bound by taking the percentile of the predictions from a
     set of classifiers, all fit with different bootstrapped samples (multiple samples per arm).
     
@@ -359,7 +350,6 @@ class BootstrappedUCB(_BasePolicyWithExploit):
         Number of parallel jobs to run (for dividing work across samples within one arm). If passing None
         will set it to 1. If passing -1 will set it to the number of CPU cores. The total number of parallel
         jobs will be njobs_arms * njobs_samples.
-
     References
     ----------
     [1] Cortes, David. "Adapting multi-armed bandits policies to contextual bandits scenarios."
@@ -499,7 +489,6 @@ class SeparateClassifiers(_BasePolicy):
         set it to the number of CPU cores. Note that if the base algorithm is itself parallelized,
         this might result in a slowdown as both compete for available threads, so don't set
         parallelization in both.
-
     References
     ----------
     [1] Cortes, David. "Adapting multi-armed bandits policies to contextual bandits scenarios."
@@ -714,7 +703,6 @@ class AdaptiveGreedy(_ActivePolicy):
     Takes the action with highest estimated reward, unless that estimation falls below a certain
     threshold, in which case it takes a an action either at random or according to an active learning
     heuristic (same way as `ActiveExplorer`).
-
     Note
     ----
     The hyperparameters here can make a large impact on the quality of the choices. Be sure
@@ -858,7 +846,6 @@ class AdaptiveGreedy(_ActivePolicy):
     def fit(self, X, a, r):
         """
         Fits the base algorithm (one per class) to partially labeled data.
-
         Parameters
         ----------
         X : array (n_samples, n_features)
@@ -867,7 +854,6 @@ class AdaptiveGreedy(_ActivePolicy):
             Arms or actions that were chosen for each observations.
         r : array (n_samples), {0,1}
             Rewards that were observed for the chosen actions. Must be binary rewards 0/1.
-
         Returns
         -------
         self : obj
@@ -1037,7 +1023,6 @@ class ExploreFirst(_BasePolicy):
         set it to the number of CPU cores. Note that if the base algorithm is itself parallelized,
         this might result in a slowdown as both compete for available threads, so don't set
         parallelization in both.
-
     References
     ----------
     [1] Cortes, David. "Adapting multi-armed bandits policies to contextual bandits scenarios."
@@ -1177,7 +1162,6 @@ class ActiveExplorer(_ActivePolicy):
         set it to the number of CPU cores. Note that if the base algorithm is itself parallelized,
         this might result in a slowdown as both compete for available threads, so don't set
         parallelization in both.
-
     References
     ----------
     [1] Cortes, David. "Adapting multi-armed bandits policies to contextual bandits scenarios."
@@ -1203,7 +1187,6 @@ class ActiveExplorer(_ActivePolicy):
         """
         Fits logistic regression (one per class) to partially labeled data,
         with actions chosen by this same policy.
-
         Parameters
         ----------
         X : array (n_samples, n_features)
@@ -1212,7 +1195,6 @@ class ActiveExplorer(_ActivePolicy):
             Arms or actions that were chosen for each observations.
         r : array (n_samples), {0,1}
             Rewards that were observed for the chosen actions. Must be binary rewards 0/1.
-
         Returns
         -------
         self : obj
@@ -1271,7 +1253,6 @@ class SoftmaxExplorer(_BasePolicy):
     
     Selects an action according to probabilites determined by a softmax transformation
     on the scores from the decision function that predicts each class.
-
     Note
     ----
     Will apply an inverse sigmoid transformations to the probabilities that come from the base algorithm
@@ -1324,7 +1305,6 @@ class SoftmaxExplorer(_BasePolicy):
         set it to the number of CPU cores. Note that if the base algorithm is itself parallelized,
         this might result in a slowdown as both compete for available threads, so don't set
         parallelization in both.
-
     References
     ----------
     [1] Cortes, David. "Adapting multi-armed bandits policies to contextual bandits scenarios."
@@ -1397,7 +1377,7 @@ class SoftmaxExplorer(_BasePolicy):
                 self.multiplier *= self.inflation_rate ** pred.shape[0]
         _apply_softmax(pred)
         chosen = np.empty(pred.shape[0], dtype = "int64")
-        self._pick_pred(i, chosen, pred) for i in range(pred.shape[0])
+        [self._pick_pred(i, chosen, pred) for i in range(pred.shape[0])]
         if output_score:
             score_chosen = pred[np.arange(pred.shape[0]), np.array(chosen)]
         chosen = self._name_arms(chosen)
@@ -1467,9 +1447,7 @@ class LinUCB:
     def drop_arm(self, arm):
         """
         Drop an arm/choice
-
         Drops (removes/deletes) an arm from the set of available choices to the policy.
-
         Note
         ----
         The available arms, if named, are stored in attribute 'choice_names'.
@@ -1480,7 +1458,6 @@ class LinUCB:
             Arm to drop. If passing an integer, will drop at that index (starting at zero). Otherwise,
             will drop the arm matching this name (argument must be of the same type as the individual entries
             passed to 'nchoices' in the initialization).
-
         Returns
         -------
         self : object
@@ -1494,13 +1471,11 @@ class LinUCB:
     def add_arm(self, arm_name = None):
         """
         Adds a new arm to the pool of choices
-
         Parameters
         ----------
         arm_name : object
             Name for this arm. Only applicable when using named arms. If None, will use the name of the last
             arm plus 1 (will only work when the names are integers).
-
         Returns
         -------
         self : object
@@ -1516,7 +1491,6 @@ class LinUCB:
         Fits one linear model for the first time to partially labeled data.
         Overwrites previously fitted coefficients if there were any.
         (See partial_fit for adding more data in batches)
-
         Parameters
         ----------
         X : array (n_samples, n_features)
@@ -1525,7 +1499,6 @@ class LinUCB:
             Arms or actions that were chosen for each observations.
         r : array (n_samples), {0,1}
             Rewards that were observed for the chosen actions. Must be binary rewards 0/1.
-
         Returns
         -------
         self : obj
@@ -1533,7 +1506,7 @@ class LinUCB:
         """
         X, a, r = _check_fit_input(X, a, r, self.choice_names)
         self.ndim = X.shape[1]
-        self._fit_single(choice, X, a, r) for choice in range(self.nchoices)
+        [self._fit_single(choice, X, a, r) for choice in range(self.nchoices)]
         return self
 
     def _fit_single(self, choice, X, a, r):
@@ -1543,7 +1516,6 @@ class LinUCB:
     def partial_fit(self, X, a, r):
         """"
         Updates each linear model with a new batch of data with actions chosen by this same policy.
-
         Parameters
         ----------
         X : array (n_samples, n_features)
@@ -1552,7 +1524,6 @@ class LinUCB:
             Arms or actions that were chosen for each observations.
         r : array (n_samples), {0,1}
             Rewards that were observed for the chosen actions. Must be binary rewards 0/1.
-
         Returns
         -------
         self : obj
@@ -1588,7 +1559,7 @@ class LinUCB:
         """
         X = _check_X_input(X)
         pred = np.zeros((X.shape[0], self.nchoices))
-        self._predict(choice, pred, exploit, X) for choice in range(self.nchoices)
+        [self._predict(choice, pred, exploit, X) for choice in range(self.nchoices)]
 
         if output_score:
             score_max = np.max(pred, axis=1)
@@ -1714,7 +1685,6 @@ class BayesianTS(_BasePolicyWithExploit):
     
     Performs Thompson Sampling by sampling a set of Logistic Regression coefficients
     from each class, then predicting the class with highest estimate.
-
     Note
     ----
     The implementation here uses PyMC3's GLM formula with default parameters and ADVI.
